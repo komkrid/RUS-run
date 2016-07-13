@@ -29,6 +29,10 @@ public class MainActivity extends AppCompatActivity {
         //Load Imge from server
     }//Main Method
 
+    public  void cilckSignIn(View view) {
+
+    }//cilckSignIn
+
     public void clickSignUpMain(View view){
         startActivity(new Intent(MainActivity.this, SignUpActivity.class));
     }
