@@ -1,6 +1,7 @@
 package rus.bamrunglok.komkid.rusrun;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -15,6 +16,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.squareup.okhttp.Call;
@@ -38,6 +41,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationManager locationManager;
     private Criteria criteria;
     private double latUserADouble, lngUserADouble;
+    private  boolean distanceABoolean = true;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +62,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
     }   // Main Method
+
+
+    //นี่คือ เมทอด ที่หาระยะ ระหว่างจุด
+    private double distance(double lat1, double lon1, double lat2, double lon2) {
+        double theta = lon1 - lon2;
+        double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
+        dist = Math.acos(dist);
+        dist = rad2deg(dist);
+        dist = dist * 60 * 1.1515 * 1.609344;
+
+
+        return (dist);
+    }
+
+    private double deg2rad(double deg) {
+        return (deg * Math.PI / 180.0);
+    }
+
+    private double rad2deg(double rad) {
+        return (rad * 180 / Math.PI);
+    }
+
 
     @Override
     protected void onResume() {
@@ -154,6 +181,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         private Context context;
         private GoogleMap googleMap;
         private String urlJSON = "http://swiftcodingthai.com/rus/get_user_master.php";
+        private int[] avataInts = new  int[]{R.drawable.bird48,R.drawable.doremon48,R.drawable.kon48,R.drawable.nobita48,R.drawable.rat48};
+
 
         public CreateMarker(Context context, GoogleMap googleMap) {
             this.context = context;
@@ -190,11 +219,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     double douLat = Double.parseDouble(jsonObject.getString("Lat"));
                     double douLng = Double.parseDouble(jsonObject.getString("Lng"));
                     String strName = jsonObject.getString("Name");
+                    int intIndex = Integer.parseInt(jsonObject.getString("Avata"));
+
 
                     LatLng latLng = new LatLng(douLat,douLng);
                     googleMap.addMarker(new MarkerOptions()
                     .position(latLng)
-                    .title(strName));
+                    .title(strName)
+                    .icon(BitmapDescriptorFactory.fromResource(avataInts[intIndex])));
                 }//for
 
             }catch (Exception e){
@@ -204,6 +236,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         }   // onPost
+
+
 
     }   // CreateMarker Class
 
@@ -216,12 +250,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Edit Lat,Lng on Server
         editLatLngOnServer();
-
         //Create Marker
-
         mMap.clear();
         CreateMarker createMarker = new CreateMarker(this,mMap);
         createMarker.execute();
+
+        //CheckDistance
+
+        double latChaeckPoint = 13.8587993;
+        double lngCheckPoint  = 100.48220158;
+        double userDiatance = distance(latChaeckPoint,lngCheckPoint,
+                latUserADouble,lngUserADouble);
+        Log.d("RusV5","Distance ==>"+userDiatance);
+
+        if(userDiatance < 10 ){
+            if(distanceABoolean ){
+                MyAlert myAlert = new MyAlert();
+                myAlert.myDialog(this,"ถึงฐานเเล้ว","คุณเข้าใกล้ต่ำกว่า 10 เมตร เเล้ว");
+                distanceABoolean = false;
+
+            }
+        }//if 1
+
+
+
 
         //Delay
         Handler handler = new Handler();
